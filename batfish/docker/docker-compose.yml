@@ -1,0 +1,19 @@
+services:
+  batfish:
+    image: batfish/allinone:latest
+    container_name: batfish_netops
+    restart: unless-stopped
+    ports:
+      - "8888:8888"
+      - "9996:9996"
+    volumes:
+      - batfish-data:/data
+    networks:
+      - netbox-lab
+
+volumes:
+  batfish-data:
+
+networks:
+  netbox-lab:
+    driver: bridge
