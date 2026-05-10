@@ -1,247 +1,107 @@
-# Batfish Ansible Modules — NETOPS.FR
 
-Custom Ansible modules for Batfish network validation, CI/CD integration and NetOps workflows.
+# Batfish Ansible Validation Modules
+
+Modules Ansible personnalisés développés autour de Batfish pour industrialiser les validations réseau dans des pipelines NetOps / CI/CD.
+
+Projet maintenu par :
+https://github.com/netops-fr
 
 ---
 
-# 🚀 Project Overview
+# Objectif du projet
 
-This repository contains a set of custom Ansible modules developed for integrating Batfish into real-world NetOps workflows.
+Ce dépôt fournit des modules Ansible permettant :
 
-The goal of this project is to simplify:
+- d'interroger Batfish,
+- de valider des routes,
+- de tester des flux L3,
+- de vérifier des ACL / filters,
+- d'analyser des adjacences L3,
+- d'intégrer Batfish dans GitLab CI/CD.
 
-- network validation
-- reachability testing
-- ACL / filter validation
-- route verification
-- CI/CD integration
-- pre-production network analysis
-- infrastructure compliance checks
+---
 
-These modules were designed around practical NetOps use cases using:
+# Architecture du lab
 
-- Batfish
-- Ansible
-- NetBox
-- GitLab CI/CD
+VMware Workstation
+
+VM Debian :
 - Docker
-- Cisco Nexus
-- FortiGate
-- EVE-NG labs
+- Batfish
+- NetBox
+- Ansible
+
+VM EVE-NG :
+- Cisco Nexus 9000v
+- FortiGate VM
 
 ---
 
-# 🧠 Why this project exists
+# Différence entre validate.py et validate_reachability.py
 
-The official Batfish Ansible collection appears outdated and incompatible with recent versions of pybatfish.
+batfish_validate_reachability.py :
+- module spécialisé
+- tests de reachability uniquement
+- paramètres directement dans le playbook
 
-This repository provides an alternative approach focused on:
+Exemple :
 
-- modern Batfish deployments
-- reusable Ansible modules
-- CI/CD-friendly workflows
-- simplified validation logic
-- production-oriented NetOps pipelines
-
----
-
-# 🏗️ Example Lab Architecture
-
-Our validation lab currently uses:
-
-- VMware Workstation
-- Debian VM
-  - NetBox container
-  - Batfish container
-- EVE-NG VM
-  - Cisco Nexus 9000v
-  - FortiGate virtual firewall
-- GitLab CI/CD
-- Dynamic NetBox inventory
+flows:
+  - name: "Ping A vers B"
+    src: "10.0.0.1"
+    dst: "10.0.0.2"
 
 ---
 
-# 📂 Repository Structure
+batfish_validate.py :
+- orchestrateur global
+- charge un params.yml
+- peut lancer plusieurs familles de tests
 
-```text
-.
-├── ansible.cfg
-├── group_vars
-├── inventories
-├── library
-├── pb01_netbox_get_sites.yml
-├── pb02_test_inventaire_netbox.yml
-├── pb03_nexus_interfaces.yml
-├── pb04_batfish_questions.yml
-├── pb05_batfish_validate.yml
-└── webhooks
-```
+Exemple :
+
+tests:
+  reachability_flows:
+    - name: "Ping A vers B"
+      src: "10.0.0.1"
+      dst: "10.0.0.2"
 
 ---
 
-# ⚙️ Installation
+# validate.py utilise-t-il les autres libs ?
 
-## Clone repository
+Actuellement, les modules semblent indépendants.
 
-```bash
-git clone https://github.com/netops-fr/batfish_ansible.git
-cd batfish_ansible
-```
+Architecture actuelle :
 
-## Create Python virtual environment
+batfish_validate.py
+= orchestrateur autonome
 
-```bash
+batfish_validate_routes.py
+= module spécialisé
+
+batfish_validate_reachability.py
+= module spécialisé
+
+---
+
+# Installation
+
 python3 -m venv ansible-env
+
 source ansible-env/bin/activate
-```
 
-## Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
+pip install ansible pybatfish pandas
 
 ---
 
-# 🐳 Batfish Deployment
+# Désactiver le venv
 
-Example Docker deployment:
-
-```bash
-docker run -d \
-  --name batfish \
-  -p 9997:9997 \
-  -p 9996:9996 \
-  batfish/allinone
-```
+deactivate
 
 ---
 
-# 🔐 Environment Variables
+# GitHub
 
-Do NOT store secrets directly inside YAML files.
-
-Recommended approach:
-
-```bash
-export NETBOX_TOKEN="nbt_xxxxxxxxx"
-```
-
-Example:
-
-```yaml
-netbox_token: "{{ lookup('env', 'NETBOX_TOKEN') }}"
-```
-
----
-
-# 📡 Example Snapshot Export
-
-```yaml
-- name: Export configurations for Batfish
-  hosts: switches
-  gather_facts: false
-
-  tasks:
-
-    - name: Create snapshot directory
-      delegate_to: localhost
-      file:
-        path: "./snapshot/configs"
-        state: directory
-
-    - name: Run show running-config all
-      cisco.nxos.nxos_command:
-        commands:
-          - "show running-config all"
-      register: running_config
-
-    - name: Save configuration
-      delegate_to: localhost
-      copy:
-        content: "{{ running_config.stdout[0] }}"
-        dest: "./snapshot/configs/{{ inventory_hostname }}.cfg"
-```
-
----
-
-# 🔎 Example Validation
-
-```yaml
-- name: Validation reachability Batfish
-  hosts: localhost
-  gather_facts: false
-
-  tasks:
-
-    - name: Reachability validation
-      batfish_validate_reachability:
-        bf_host: "{{ bf_host }}"
-        bf_network: "{{ bf_network }}"
-        bf_snapshot: "{{ bf_snapshot }}"
-```
-
----
-
-# 🧪 Current Modules
-
-- batfish_questions.py
-- batfish_validate.py
-- batfish_validate_reachability.py
-- batfish_validate_routes.py
-- batfish_validate_filters.py
-- batfish_validate_filterline.py
-
----
-
-# 🔄 Example NetOps Workflow
-
-```text
-NetBox
-   ↓
-Dynamic Inventory
-   ↓
-Ansible
-   ↓
-Snapshot Export
-   ↓
-Batfish Validation
-   ↓
-GitLab CI/CD
-```
-
----
-
-# 🧰 Technologies Used
-
-- Python
-- Ansible
-- Batfish
-- Docker
-- NetBox
-- GitLab CI/CD
-- Cisco NXOS
-- FortiGate
-- EVE-NG
-
----
-
-# 📚 Useful Resources
-
-- https://batfish.readthedocs.io/
-- https://batfish.readthedocs.io/en/latest/supported_devices.html
-- https://batfish.readthedocs.io/en/latest/formats.html
-
----
-
-# 🌍 NETOPS.FR
-
-- https://netops.fr
-- https://github.com/netops-fr
-
----
-
-# 📜 License
-
-MIT License
+https://github.com/netops-fr
 
