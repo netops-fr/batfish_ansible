@@ -1,2 +1,2 @@
 netbox_url: "http://192.168.154.174:8000"
-netbox_token: "nbt_XGMDUSRWtdwX.xY2iLSS3Is35Llw4gJt7kIn5CQohTd0RYADM8a19"
+token: "{{ lookup('env', 'NETBOX_TOKEN') }}"
