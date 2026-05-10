@@ -12,5 +12,3 @@ batfish_port_v2: 9996
 # - par défaut : python3 système
 # - tu peux surcharger avec -e "python_venv=/chemin/vers/venv/bin/python"
 python_venv: "python3"
-
-batfish_execution_mode: "strict"
