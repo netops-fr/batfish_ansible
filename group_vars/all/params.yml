@@ -1,4 +1,5 @@
 # group_vars/all/params.yml
+########
 tests:
   no_default_route: false
   require_l3_edges: false
@@ -9,6 +10,53 @@ tests:
       network: "20.0.0.0/8"
       next_hop_ip: "10.4.0.254"
 
+  # expected_l3_edges:
+  #   - node: "fortigat_ansible"
+  #     iface: "port2"
+  #     ip: "10.0.0.1"
+  #     remote_node: "forti02"
+  #     remote_iface: "port2"
+  #     remote_ip: "10.0.0.2"
+
+  #   - node: "forti02"
+  #     iface: "port2"
+  #     ip: "10.0.0.2"
+  #     remote_node: "fortigat_ansible"
+  #     remote_iface: "port2"
+  #     remote_ip: "10.0.0.1"
+
+  # reachability_flows:
+  #   - name: "Ping 10.0.0.1 -> 10.0.0.2"
+  #    src: "10.0.0.1"
+  #    dst: "10.0.0.2"
+  #    protocol: "icmp"
+  #    bidirectional: true
+
+  #   - name: "Ping 10.0.10.1 -> 10.0.11.1"
+  #    src: "10.0.10.1"
+  #    dst: "10.0.11.1"
+  #    protocol: "icmp"
+  #    bidirectional: true
+
+  #   - name: "HTTP 10.0.10.1 -> 10.0.11.1:80 (unidirectionnel)"
+  #     src: "10.0.10.1"
+  #     dst: "10.0.11.1"
+  #     protocol: "tcp"
+  #     dst_port: 80
+  #     bidirectional: false
+  #     start_location: "fortigat_ansible"
+
+  # filter_tests:
+  #   flows:
+  #     - name: "Mon flux recherché"
+  #       src: "10.0.10.1"
+  #       dst: "10.0.11.1"
+  #       protocol: "tcp"
+  #       dst_port: 80
+  #       expected_action: "permit"
+  #       filter: "FLUX_"
+
+########
 questions:
   fileParseStatus: false
   parseWarning: true
