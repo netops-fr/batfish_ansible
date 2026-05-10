@@ -1,4 +1,3 @@
-# batfish_ansible
 # Batfish Ansible Modules — NETOPS.FR
 
 Custom Ansible modules for Batfish network validation, CI/CD integration and NetOps workflows.
