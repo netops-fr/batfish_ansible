@@ -1,0 +1,30 @@
+---
+- name: Récupérer les sites NetBox avec la collection
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Charger les sites NetBox
+      set_fact:
+        netbox_sites: "{{ query('netbox.netbox.nb_lookup', 'sites', api_endpoint=netbox_url, token=netbox_token, validate_certs=false) }}"
+
+    - name: Afficher les sites
+      debug:
+        msg: "{{ item.value.name }} - {{ item.value.slug }}"
+      loop: "{{ netbox_sites }}"
+
+    - name: Construire une liste propre des sites
+      set_fact:
+        sites_clean: "{{ sites_clean | default([]) + [ {
+          'name': item.value.name,
+          'slug': item.value.slug,
+          'status': item.value.status.value,
+          'region': (item.value.region.name if item.value.region else None)
+        } ] }}"
+      loop: "{{ netbox_sites }}"
+
+    - name: Générer un fichier YAML propre
+      copy:
+        content: "{{ sites_clean | to_nice_yaml }}"
+        dest: "./sites.yml"

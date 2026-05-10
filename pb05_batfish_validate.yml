@@ -1,0 +1,25 @@
+---
+- name: Envoyer le snapshot à Batfish, lancer l'analyse et les tests
+  hosts: localhost
+  gather_facts: no
+
+  tasks:
+    - name: Lancer la validation Batfish
+      batfish_validate:
+        host: "{{ batfish_host }}"
+        port: "{{ batfish_port_v2 }}"
+        network: "{{ batfish_network }}"
+        snapshot: "{{ batfish_snapshot }}"
+        snapshot_dir: "{{ batfish_snapshot_dir }}"
+        params_file: "{{ batfish_params_file }}"
+      register: bf_result
+
+    - name: Afficher un résumé des tests
+      debug:
+        var: bf_result.tests_summary
+
+    - name: Echouer si la validation Batfish est KO
+      fail:
+        msg: "Validation Batfish échouée, voir bf_result.tests_summary"
+      when: not bf_result.tests_ok
+

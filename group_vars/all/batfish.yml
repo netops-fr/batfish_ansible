@@ -1,0 +1,16 @@
+batfish_root_dir: "{{ playbook_dir }}"
+batfish_snapshot_dir: "{{ batfish_root_dir }}/batfish/nexus_snapshot_01"
+batfish_params_file: "{{ batfish_root_dir }}/group_vars/all/params.yml"
+
+batfish_network: "nexus_lab"
+batfish_snapshot: "nexus_snapshot_01"
+
+batfish_host: "127.0.0.1"
+batfish_port_v2: 9996
+
+# Python à utiliser :
+# - par défaut : python3 système
+# - tu peux surcharger avec -e "python_venv=/chemin/vers/venv/bin/python"
+python_venv: "python3"
+
+batfish_execution_mode: "strict"

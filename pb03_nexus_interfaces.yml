@@ -1,0 +1,103 @@
+---
+- name: Webhook NetBox puis configuration interface Cisco Nexus
+  hosts: "{{ target_device | default('sw1-lab') }}"
+  gather_facts: false
+
+  vars:
+    interface_name: "{{ webhook_interface | default('') }}"
+    interface_mode: "{{ webhook_mode | default('') }}"
+    untagged_vlan: "{{ webhook_untagged_vlan_vid | default('') }}"
+    tagged_vlans: "{{ webhook_tagged_vlan_vids | default([]) }}"
+
+  tasks:
+    - name: Afficher les données reçues via webhook
+      debug:
+        msg:
+          event: "{{ webhook_event | default('') }}"
+          object_type: "{{ webhook_object_type | default('') }}"
+          device: "{{ webhook_device | default('') }}"
+          interface: "{{ interface_name }}"
+          mode: "{{ interface_mode }}"
+          untagged_vlan_vid: "{{ untagged_vlan }}"
+          tagged_vlan_vids: "{{ tagged_vlans }}"
+
+    - name: Lire la configuration actuelle de l'interface
+      cisco.nxos.nxos_command:
+        commands:
+          - "show running-config interface {{ interface_name }}"
+      register: nexus_interface_config_before
+      when: interface_name | length > 0
+
+    - name: Afficher la configuration actuelle
+      debug:
+        var: nexus_interface_config_before.stdout_lines
+      when: nexus_interface_config_before is defined
+
+    - name: Mettre à jour l'interface en mode access
+      cisco.nxos.nxos_config:
+        parents:
+          - "interface {{ interface_name }}"
+        lines:
+          - "switchport"
+          - "switchport mode access"
+          - "no switchport trunk native vlan"
+          - "no switchport trunk allowed vlan"
+          - "switchport access vlan {{ untagged_vlan }}"
+      register: config_update_access
+      when:
+        - interface_name | length > 0
+        - interface_mode == "access"
+        - untagged_vlan | string | length > 0
+
+    - name: Mettre à jour l'interface en mode trunk
+      cisco.nxos.nxos_config:
+        parents:
+          - "interface {{ interface_name }}"
+        lines:
+          - "switchport"
+          - "no switchport access vlan"
+          - "switchport mode trunk"
+          - "switchport trunk native vlan {{ untagged_vlan }}"
+          - "switchport trunk allowed vlan {{ tagged_vlans | join(',') }}"
+          - "no shutdown"
+      register: config_update_trunk
+      when:
+        - interface_name | length > 0
+        - interface_mode == "tagged"
+        - tagged_vlans | length > 0
+
+    - name: Relire la configuration après modification
+      cisco.nxos.nxos_command:
+        commands:
+          - "show running-config interface {{ interface_name }}"
+      register: nexus_interface_config_after
+      when: interface_name | length > 0
+
+    - name: Afficher la configuration après modification
+      debug:
+        var: nexus_interface_config_after.stdout_lines
+      when: nexus_interface_config_after is defined
+
+    - name: Contrôler que la configuration access est appliquée
+      assert:
+        that:
+          - "'switchport access vlan ' ~ untagged_vlan in nexus_interface_config_after.stdout[0]"
+        fail_msg: "La configuration access n'a pas été correctement appliquée sur {{ interface_name }}"
+        success_msg: "Configuration access appliquée correctement sur {{ interface_name }}"
+      when:
+        - interface_mode == "access"
+        - untagged_vlan | string | length > 0
+        - nexus_interface_config_after is defined
+
+    - name: Contrôler que la configuration trunk est appliquée
+      assert:
+        that:
+          - "'switchport mode trunk' in nexus_interface_config_after.stdout[0]"
+          - "'switchport trunk native vlan ' ~ untagged_vlan in nexus_interface_config_after.stdout[0]"
+          - "'switchport trunk allowed vlan ' ~ (tagged_vlans | join(',')) in nexus_interface_config_after.stdout[0]"
+        fail_msg: "La configuration trunk n'a pas été correctement appliquée sur {{ interface_name }}"
+        success_msg: "Configuration trunk appliquée correctement sur {{ interface_name }}"
+      when:
+        - interface_mode == "tagged"
+        - tagged_vlans | length > 0
+        - nexus_interface_config_after is defined

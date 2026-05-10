@@ -1,0 +1,30 @@
+---
+- name: Envoyer le snapshot à Batfish, lancer l'analyse et les tests
+  hosts: localhost
+  gather_facts: no
+
+  tasks:
+    - name: Poser les questions principales au serveur Batfish
+      batfish_questions:
+        host: "{{ batfish_host }}"
+        port: "{{ batfish_port_v2 }}"
+        network: "{{ batfish_network }}"
+        snapshot: "{{ batfish_snapshot }}"
+        snapshot_dir: "{{ batfish_snapshot_dir }}"
+        layer3_edges: "{{ questions.layer3Edges }}"
+        routes: "{{ questions.routes }}"
+        parse_warning: "{{ questions.parseWarning }}"
+      register: bf_questions
+
+
+    ####
+    - name: Afficher les routes Batfish détaillées
+      debug:
+        var: bf_questions.routes
+      when: bf_questions.routes is not none
+
+    - name: Afficher le résumé des warnings Batfish
+      debug:
+        var: bf_questions.parse_warning_summary
+      when: bf_questions.parse_warning_summary is not none
+

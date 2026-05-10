@@ -1,0 +1,25 @@
+# group_vars/all/params.yml
+tests:
+  no_default_route: false
+  require_l3_edges: false
+  require_ip_owners: false
+
+  expected_static_routes:
+    - node: "sw1-lab"
+      network: "20.0.0.0/8"
+      next_hop_ip: "10.4.0.254"
+
+questions:
+  fileParseStatus: false
+  parseWarning: true
+  nodeProperties: false
+  interfaceProperties: false
+  ipOwners: false
+  layer3Edges: true
+  routes: true
+  searchFiltersDump: false
+
+topology:
+  enabled: false
+  output_dot: "batfish_topology_l3.dot"
+

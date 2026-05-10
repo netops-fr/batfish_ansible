@@ -1,0 +1,36 @@
+---
+- name: Test inventaire NetBox
+  hosts: sites_paris
+  gather_facts: false
+
+  tasks:
+    - name: Afficher les infos NetBox
+      debug:
+        msg:
+          - "Host: {{ inventory_hostname }}"
+          - "IP: {{ ansible_host }}"
+          - "Site: {{ sites }}"
+          - "Role: {{ device_roles }}"
+
+    - name: Récupérer les interfaces du device
+      set_fact:
+        netbox_interfaces: "{{ query(
+          'netbox.netbox.nb_lookup',
+          'interfaces',
+          api_endpoint=netbox_url,
+          token=netbox_token,
+          validate_certs=false,
+          api_filter='device=' + inventory_hostname
+        ) }}"
+
+    - name: Afficher uniquement les interfaces avec VLAN
+      debug:
+        msg:
+          interface: "{{ item.value.name }}"
+          mode: "{{ item.value.mode.value | default('non défini') }}"
+          vlan_untagged: "{{ item.value.untagged_vlan.vid | default('aucun') }}"
+          vlans_tagged: "{{ item.value.tagged_vlans | default([]) | map(attribute='vid') | list }}"
+      loop: "{{ netbox_interfaces }}"
+      when: >
+        (item.value.untagged_vlan is not none)
+        or (item.value.tagged_vlans | default([]) | length > 0)

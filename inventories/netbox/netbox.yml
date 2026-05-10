@@ -1,0 +1,20 @@
+---
+plugin: netbox.netbox.nb_inventory
+
+api_endpoint: "http://192.168.154.174:8000"
+token: "nbt_XGMDUSRWtdwX.xY2iLSS3Is35Llw4gJt7kIn5CQohTd0RYADM8a19"
+validate_certs: false
+
+devices: true
+virtual_machines: true
+
+config_context: true
+
+group_by:
+  - sites
+  - device_roles
+  - platforms
+  - tags
+
+compose:
+  ansible_host: primary_ip4.address | ansible.utils.ipaddr('address')
